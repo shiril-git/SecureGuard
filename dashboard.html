@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureGuard - Security Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .logo span {
+            color: #764ba2;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #667eea;
+            color: #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        /* Risk Meter */
+        .risk-meter {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+        }
+
+        .risk-score {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+
+        .risk-low { color: #48bb78; }
+        .risk-medium { color: #ed8936; }
+        .risk-high { color: #f56565; }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        /* Results */
+        .result-box {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Grid Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Strength Meter */
+        .strength-meter {
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+            transition: all 0.3s;
+            background: #e2e8f0;
+        }
+
+        .weak { background: #f56565; width: 33%; }
+        .medium { background: #ed8936; width: 66%; }
+        .strong { background: #48bb78; width: 100%; }
+
+        /* Alert */
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .alert-danger {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge-high { background: #f56565; color: white; }
+        .badge-medium { background: #ed8936; color: white; }
+        .badge-low { background: #48bb78; color: white; }
+        .badge-critical { background: #c53030; color: white; }
+
+        /* Tips */
+        .tips-box {
+            background: #e6f7ff;
+            border-left: 4px solid #667eea;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        /* Software Card Styles */
+        .software-item {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .software-update {
+            background: #fff3cd;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        /* Malware Item */
+        .malware-item {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #f56565;
+            background: #fee;
+            border-radius: 5px;
+        }
+
+        .malware-critical {
+            border-left-color: #c53030;
+            background: #fff5f5;
+        }
+
+        /* ML Risk Card Styles */
+        .risk-probability-bar {
+            background: #e2e8f0;
+            height: 30px;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .probability-low { background: #48bb78; color: white; text-align: center; line-height: 30px; font-size: 12px; }
+        .probability-medium { background: #ed8936; color: white; text-align: center; line-height: 30px; font-size: 12px; }
+        .probability-high { background: #f56565; color: white; text-align: center; line-height: 30px; font-size: 12px; }
+
+        .ml-score-large {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        details summary {
+            cursor: pointer;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        details summary:hover {
+            color: #764ba2;
+        }
+
+        /* History Item Styles */
+        .history-item {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .history-item-low { border-left-color: #48bb78; }
+        .history-item-medium { border-left-color: #ed8936; }
+        .history-item-high { border-left-color: #f56565; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🛡️ Secure<span>Guard</span></div>
+        <div class="nav-links">
+            <span id="userDisplay" style="color: #667eea;"></span>
+            <button onclick="logout()" class="btn btn-outline" id="logoutBtn" style="display: none;">Logout</button>
+            <button onclick="showLogin()" class="btn btn-primary" id="loginBtn">Login</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Login/Register Section -->
+        <div id="authSection" class="card">
+            <h2>🔐 Access SecureGuard</h2>
+            <div id="loginForm">
+                <div class="form-group">
+                    <label>Email or Phone</label>
+                    <input type="text" id="loginUsername" placeholder="Enter email or phone">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password">
+                </div>
+                <div id="twofaSection" style="display: none;">
+                    <div class="form-group">
+                        <label>2FA Code</label>
+                        <input type="text" id="twofaCode" placeholder="Enter 6-digit code">
+                    </div>
+                </div>
+                <button onclick="login()" class="btn btn-primary">Login</button>
+                <button onclick="showRegister()" class="btn btn-outline" style="margin-left: 1rem;">Register New Account</button>
+            </div>
+            <div id="registerForm" style="display: none;">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="regPhone" placeholder="+1234567890">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" onkeyup="checkPasswordStrength()" placeholder="Create a strong password">
+                    <div class="strength-meter" id="strengthMeter"></div>
+                    <small id="passwordFeedback" style="color: #718096;"></small>
+                </div>
+                <button onclick="register()" class="btn btn-primary">Register</button>
+                <button onclick="showLogin()" class="btn btn-outline" style="margin-left: 1rem;">Back to Login</button>
+            </div>
+            <div id="authMessage" class="result-box" style="display: none;"></div>
+        </div>
+
+        <!-- Dashboard (Hidden until login) -->
+        <div id="dashboard" style="display: none;">
+            <!-- Risk Overview -->
+            <div class="card">
+                <h2>📊 Overall Security Posture</h2>
+                <div class="risk-meter">
+                    <div class="risk-score" id="riskScore">--</div>
+                    <div id="riskStatus">Not Scanned Yet</div>
+                    <div>
+                        <button onclick="runFullScan()" class="btn btn-primary" style="margin-top: 1rem;">🔍 Run Full Security Scan</button>
+                        <button onclick="exportPDFReport()" class="btn btn-outline" style="margin-top: 1rem; margin-left: 1rem;">📄 Export PDF Report</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <!-- Admin Panel Scanner -->
+                <div class="card">
+                    <h2>🔍 Admin Panel Detection</h2>
+                    <div class="form-group">
+                        <input type="text" id="scanUrl" placeholder="Enter website URL (e.g., https://wordpress.org)">
+                    </div>
+                    <button onclick="scanAdminPanel()" class="btn btn-primary">Scan Admin Panels</button>
+                    <div class="tips-box">
+                        💡 <strong>Try:</strong> https://wordpress.org (finds /wp-admin)
+                    </div>
+                    <div id="adminResult" class="result-box" style="margin-top: 1rem;"></div>
+                </div>
+
+                <!-- Misconfiguration Scanner -->
+                <div class="card">
+                    <h2>⚠️ Security Headers Check</h2>
+                    <div class="form-group">
+                        <input type="text" id="misconfigUrl" placeholder="Enter website URL (e.g., https://httpbin.org)">
+                    </div>
+                    <button onclick="scanMisconfigurations()" class="btn btn-primary">Check Headers</button>
+                    <div class="tips-box">
+                        💡 <strong>Try:</strong> https://httpbin.org (shows missing headers)
+                    </div>
+                    <div id="misconfigResult" class="result-box" style="margin-top: 1rem;"></div>
+                </div>
+
+                <!-- Outdated Software Detection -->
+                <div class="card">
+                    <h2>📦 Outdated Software Detection</h2>
+                    <div class="form-group">
+                        <input type="text" id="softwareUrl" placeholder="Enter website URL (e.g., https://wordpress.org)">
+                    </div>
+                    <button onclick="scanOutdatedSoftware()" class="btn btn-primary">Scan for Outdated Software</button>
+                    <div class="tips-box">
+                        💡 <strong>Try:</strong> https://wordpress.org (detects WordPress, jQuery, etc.)
+                    </div>
+                    <div id="softwareResult" class="result-box" style="margin-top: 1rem;"></div>
+                </div>
+
+                <!-- Malware Detection -->
+                <div class="card">
+                    <h2>🦠 Malware Detection</h2>
+                    <div class="form-group">
+                        <input type="text" id="malwareUrl" placeholder="Enter website URL (e.g., https://wordpress.org)">
+                    </div>
+                    <button onclick="scanMalware()" class="btn btn-primary">Scan for Malware</button>
+                    <div class="tips-box">
+                        💡 <strong>What we detect:</strong> Malicious scripts, backdoors, suspicious iframes, phishing patterns, cryptominers
+                    </div>
+                    <div id="malwareResult" class="result-box" style="margin-top: 1rem;"></div>
+                </div>
+
+                <!-- ML Risk Scoring -->
+                <div class="card">
+                    <h2>🤖 ML Risk Assessment</h2>
+                    <div class="form-group">
+                        <button onclick="calculateMLRisk()" class="btn btn-primary" style="width: 100%;">🤖 Calculate ML Risk Score</button>
+                    </div>
+                    <div class="tips-box">
+                        💡 <strong>How it works:</strong> Machine Learning model analyzes all scan results to predict overall security risk (0-100 score) using Random Forest algorithm
+                    </div>
+                    <div id="mlRiskResult" class="result-box" style="margin-top: 1rem;"></div>
+                </div>
+
+                <!-- Password Strength Checker -->
+                <div class="card">
+                    <h2>🔐 Password Strength Checker</h2>
+                    <div class="form-group">
+                        <input type="password" id="checkPassword" placeholder="Enter password to check" onkeyup="checkCustomPassword()">
+                    </div>
+                    <div id="passwordStrengthResult"></div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="card">
+                    <h2>💡 Security Recommendations</h2>
+                    <div id="recommendationsList" class="result-box">
+                        <p>Run a security scan to get recommendations</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scan History Card -->
+            <div class="card">
+                <h2>📜 Scan History</h2>
+                <div id="scanHistoryList" class="result-box">
+                    <p>Loading scan history...</p>
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <button onclick="loadScanHistory()" class="btn btn-outline">🔄 Refresh History</button>
+                    <button onclick="clearHistory()" class="btn btn-outline" style="margin-left: 0.5rem;">🗑️ Clear History</button>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="card">
+                <h2>🚨 Recent Activity Log</h2>
+                <div id="activityLog" class="result-box">
+                    <p>No activity logs yet. Your actions will appear here.</p>
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <button onclick="loadActivityLogs()" class="btn btn-outline">🔄 Refresh Logs</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let authToken = localStorage.getItem('token');
+        let currentUserId = null;
+
+        // Store scan results for PDF export and ML analysis
+        let scanResults = {
+            admin_panel: null,
+            security_headers: null,
+            outdated_software: null,
+            malware: null
+        };
+
+        // Check if user is logged in
+        if (authToken) {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'inline-block';
+            // Load history on dashboard load
+            loadScanHistory();
+            loadActivityLogs();
+        }
+
+        // ============ HELPER FUNCTIONS ============
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            element.style.display = 'block';
+            element.className = `alert alert-${type}`;
+            element.innerHTML = message;
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // ============ HISTORY FUNCTIONS ============
+
+        // Load Scan History
+        async function loadScanHistory() {
+            try {
+                const response = await fetch(`${API_BASE}/api/scan-history?limit=20`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                const historyDiv = document.getElementById('scanHistoryList');
+                
+                if (!historyDiv) return;
+                
+                if (data.success && data.scans && data.scans.length > 0) {
+                    let historyHtml = '';
+                    data.scans.forEach(scan => {
+                        const date = new Date(scan.created_at).toLocaleString();
+                        let riskClass = 'history-item-low';
+                        if (scan.risk_level === 'MEDIUM') riskClass = 'history-item-medium';
+                        if (scan.risk_level === 'HIGH') riskClass = 'history-item-high';
+                        
+                        historyHtml += `
+                            <div class="history-item ${riskClass}">
+                                <strong>${scan.scan_type.replace(/_/g, ' ').toUpperCase()}</strong><br>
+                                📍 ${scan.target_url}<br>
+                                ⚠️ Risk: <span style="color: ${scan.risk_level === 'HIGH' ? '#f56565' : scan.risk_level === 'MEDIUM' ? '#ed8936' : '#48bb78'}">${scan.risk_level}</span><br>
+                                🕐 ${date}
+                            </div>
+                        `;
+                    });
+                    historyDiv.innerHTML = historyHtml;
+                } else {
+                    historyDiv.innerHTML = '<p>No scans performed yet. Run a security scan to see history here.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading scan history:', error);
+                const historyDiv = document.getElementById('scanHistoryList');
+                if (historyDiv) historyDiv.innerHTML = '<p style="color: #f56565;">Error loading history. Please login again.</p>';
+            }
+        }
+
+        // Load Activity Logs
+        async function loadActivityLogs() {
+            try {
+                const response = await fetch(`${API_BASE}/api/activity-logs?limit=30`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                const logDiv = document.getElementById('activityLog');
+                
+                if (!logDiv) return;
+                
+                if (data.success && data.logs && data.logs.length > 0) {
+                    let logsHtml = '';
+                    data.logs.forEach(log => {
+                        const date = new Date(log.created_at).toLocaleString();
+                        logsHtml += `
+                            <div style="margin: 5px 0; padding: 8px; border-bottom: 1px solid #eee;">
+                                <strong>${log.action}</strong><br>
+                                📝 ${log.details}<br>
+                                🕐 ${date}<br>
+                                🌐 IP: ${log.ip_address}
+                            </div>
+                        `;
+                    });
+                    logDiv.innerHTML = logsHtml;
+                } else {
+                    logDiv.innerHTML = '<p>No activity logs yet. Your actions will appear here.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading activity logs:', error);
+                const logDiv = document.getElementById('activityLog');
+                if (logDiv) logDiv.innerHTML = '<p style="color: #f56565;">Error loading activity logs. Please login again.</p>';
+            }
+        }
+
+        // Clear Scan History
+        async function clearHistory() {
+            if (!confirm('Are you sure you want to clear your scan history? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/clear-history`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('authMessage', 'Scan history cleared successfully!', 'success');
+                    loadScanHistory();
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                showMessage('authMessage', 'Failed to clear history: ' + error.message, 'danger');
+            }
+        }
+
+        // ============ ML RISK SCORING FUNCTION ============
+        async function calculateMLRisk() {
+            const resultDiv = document.getElementById('mlRiskResult');
+            
+            if (!resultDiv) return;
+            
+            if (!scanResults.admin_panel && !scanResults.security_headers && 
+                !scanResults.outdated_software && !scanResults.malware) {
+                resultDiv.innerHTML = `
+                    <div style="color: #ed8936;">
+                        ⚠️ Please run at least one security scan before calculating ML risk score.
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="loading"></div> Analyzing with ML model...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/ml-risk-score`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        scan_data: {
+                            admin_panel: scanResults.admin_panel,
+                            security_headers: scanResults.security_headers,
+                            outdated_software: scanResults.outdated_software,
+                            malware: scanResults.malware
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultDiv.innerHTML = `<div style="color: #f56565;">❌ Error: ${data.error}</div>`;
+                    return;
+                }
+                
+                const risk = data.risk_assessment;
+                const score = risk.risk_score;
+                
+                let scoreColor = '#48bb78';
+                let scoreClass = 'risk-low';
+                if (score >= 70) {
+                    scoreColor = '#f56565';
+                    scoreClass = 'risk-high';
+                } else if (score >= 40) {
+                    scoreColor = '#ed8936';
+                    scoreClass = 'risk-medium';
+                }
+                
+                resultDiv.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <div class="ml-score-large" style="color: ${scoreColor};">${score}</div>
+                        <div style="font-size: 1rem;">out of 100</div>
+                        <div class="risk-score ${scoreClass}" style="font-size: 1rem; margin-top: 5px;">${risk.risk_level} RISK</div>
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <strong>📊 Confidence:</strong> ${risk.confidence}%
+                        <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 5px;">
+                            <div style="background: ${scoreColor}; width: ${risk.confidence}%; height: 8px; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <strong>📈 Risk Probabilities:</strong>
+                        <div class="risk-probability-bar" style="margin-top: 8px;">
+                            <div class="probability-low" style="width: ${risk.probabilities.LOW}%;">${risk.probabilities.LOW}%</div>
+                            <div class="probability-medium" style="width: ${risk.probabilities.MEDIUM}%;">${risk.probabilities.MEDIUM}%</div>
+                            <div class="probability-high" style="width: ${risk.probabilities.HIGH}%;">${risk.probabilities.HIGH}%</div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 12px;">
+                            <span style="color: #48bb78;">LOW</span>
+                            <span style="color: #ed8936;">MEDIUM</span>
+                            <span style="color: #f56565;">HIGH</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                        <strong>💡 ${risk.risk_description}</strong>
+                    </div>
+                    
+                    <details style="margin-top: 10px;">
+                        <summary>🔍 View Detailed Analysis</summary>
+                        <div style="margin-top: 10px; font-size: 0.85rem;">
+                            <strong>Features Analyzed by ML Model:</strong><br>
+                            • Admin Panels: ${risk.features_used.admin_panels_count}<br>
+                            • Missing Headers: ${risk.features_used.missing_headers_count}<br>
+                            • Outdated Software: ${risk.features_used.outdated_software_count}<br>
+                            • Malware Signatures: ${risk.features_used.malware_signatures_count}<br>
+                            • Suspicious URLs: ${risk.features_used.suspicious_urls_count}<br>
+                            • Inline Events: ${risk.features_used.inline_events_count}<br>
+                            • External Scripts: ${risk.features_used.external_scripts_count}<br>
+                            • Password Score: ${risk.features_used.password_strength_score}/5
+                        </div>
+                    </details>
+                `;
+                
+                const riskScoreDiv = document.getElementById('riskScore');
+                const riskStatusDiv = document.getElementById('riskStatus');
+                if (riskScoreDiv) {
+                    riskScoreDiv.innerHTML = `${Math.round(score)}%`;
+                    riskScoreDiv.className = `risk-score risk-${risk.risk_level.toLowerCase()}`;
+                }
+                if (riskStatusDiv) riskStatusDiv.innerHTML = risk.risk_description;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: #f56565;">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // ============ SCAN FUNCTIONS ============
+
+        // Scan Admin Panel
+        async function scanAdminPanel() {
+            const url = document.getElementById('scanUrl').value;
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            const resultDiv = document.getElementById('adminResult');
+            if (!resultDiv) return;
+            resultDiv.innerHTML = '<div class="loading"></div> Scanning...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/scan/admin-panel`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ url })
+                });
+                
+                const data = await response.json();
+                scanResults.admin_panel = data;
+                
+                if (data.error) {
+                    resultDiv.innerHTML = `<div style="color: #f56565;"><strong>❌ Error:</strong> ${data.error}</div>`;
+                    return;
+                }
+                
+                const exposedPanels = data.exposed_panels || [];
+                const totalFound = data.total_found !== undefined ? data.total_found : exposedPanels.length;
+                const riskLevel = data.risk_level || 'LOW';
+                let riskColor = riskLevel === 'HIGH' ? '#f56565' : riskLevel === 'MEDIUM' ? '#ed8936' : '#48bb78';
+                
+                let panelsHtml = '';
+                if (exposedPanels.length > 0) {
+                    panelsHtml = '<strong>🔓 Exposed Admin Panels:</strong><br>';
+                    exposedPanels.forEach(panel => {
+                        panelsHtml += `<div style="margin: 5px 0; padding-left: 15px; border-left: 3px solid #f56565;">• ${panel.url} (Status: ${panel.status})</div>`;
+                    });
+                } else {
+                    panelsHtml = '<strong>✅ No exposed admin panels detected!</strong>';
+                }
+                
+                resultDiv.innerHTML = `
+                    <div style="margin-bottom: 10px;">
+                        <strong>🌐 URL:</strong> ${data.url || url}<br>
+                        <strong>⚠️ Risk Level:</strong> <span style="color: ${riskColor};">${riskLevel}</span><br>
+                        <strong>🔍 Panels Found:</strong> ${totalFound}<br>
+                        <strong>💡 Recommendation:</strong> ${data.recommendation}
+                    </div>
+                    <hr>${panelsHtml}
+                `;
+                
+                loadScanHistory();
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: #f56565;">❌ Connection Error: ${error.message}</div>`;
+            }
+        }
+
+        // Scan Misconfigurations
+        async function scanMisconfigurations() {
+            const url = document.getElementById('misconfigUrl').value;
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            const resultDiv = document.getElementById('misconfigResult');
+            if (!resultDiv) return;
+            resultDiv.innerHTML = '<div class="loading"></div> Scanning...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/scan/misconfigurations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ url })
+                });
+                
+                const data = await response.json();
+                scanResults.security_headers = data;
+                
+                if (data.error) {
+                    resultDiv.innerHTML = `<div style="color: #f56565;"><strong>❌ Error:</strong> ${data.error}</div>`;
+                    return;
+                }
+                
+                const issues = data.issues || [];
+                const totalIssues = data.total_issues !== undefined ? data.total_issues : issues.length;
+                const riskLevel = data.risk_level || 'LOW';
+                let riskColor = riskLevel === 'HIGH' ? '#f56565' : riskLevel === 'MEDIUM' ? '#ed8936' : '#48bb78';
+                
+                let issuesHtml = '';
+                if (issues.length > 0) {
+                    issuesHtml = '<strong>📋 Issues Found:</strong><br>';
+                    issues.forEach(issue => {
+                        issuesHtml += `<div style="margin: 5px 0;">• ${issue.message}</div>`;
+                    });
+                } else {
+                    issuesHtml = '<strong>✅ No security issues detected!</strong>';
+                }
+                
+                resultDiv.innerHTML = `
+                    <div style="margin-bottom: 10px;">
+                        <strong>🌐 URL:</strong> ${data.url || url}<br>
+                        <strong>⚠️ Risk Level:</strong> <span style="color: ${riskColor};">${riskLevel}</span><br>
+                        <strong>🔍 Issues Found:</strong> ${totalIssues}<br>
+                        <strong>💡 Recommendation:</strong> ${data.recommendation}
+                    </div>
+                    <hr>${issuesHtml}
+                `;
+                
+                loadScanHistory();
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: #f56565;">❌ Connection Error: ${error.message}</div>`;
+            }
+        }
+
+        // Scan Outdated Software
+        async function scanOutdatedSoftware() {
+            const url = document.getElementById('softwareUrl').value;
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            const resultDiv = document.getElementById('softwareResult');
+            if (!resultDiv) return;
+            resultDiv.innerHTML = '<div class="loading"></div> Scanning...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/scan/outdated-software`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ url })
+                });
+                
+                const data = await response.json();
+                scanResults.outdated_software = data;
+                
+                if (data.error) {
+                    resultDiv.innerHTML = `<div style="color: #f56565;"><strong>❌ Error:</strong> ${data.error}</div>`;
+                    return;
+                }
+                
+                let riskColor = data.risk_level === 'HIGH' ? '#f56565' : data.risk_level === 'MEDIUM' ? '#ed8936' : '#48bb78';
+                
+                let softwareHtml = '';
+                if (data.software_found && data.software_found.length > 0) {
+                    softwareHtml = '<strong>📋 Detected Software:</strong><br><br>';
+                    data.software_found.forEach(sw => {
+                        const statusColor = sw.is_outdated ? '#f56565' : '#48bb78';
+                        const statusText = sw.is_outdated ? '⚠️ OUTDATED' : '✅ UP TO DATE';
+                        softwareHtml += `
+                            <div style="margin: 10px 0; padding: 10px; border-left: 4px solid ${statusColor}; background: #f9f9f9;">
+                                <strong>${sw.name}</strong><br>
+                                Version: ${sw.version}<br>
+                                Latest: ${sw.latest_version}<br>
+                                Status: <span style="color: ${statusColor};">${statusText}</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    softwareHtml = '<strong>✅ No known software detected or all software is up to date!</strong>';
+                }
+                
+                resultDiv.innerHTML = `
+                    <div style="margin-bottom: 10px;">
+                        <strong>🌐 URL:</strong> ${data.url}<br>
+                        <strong>⚠️ Risk Level:</strong> <span style="color: ${riskColor};">${data.risk_level}</span><br>
+                        <strong>📊 Outdated Components:</strong> ${data.outdated_count} out of ${data.total_found}<br>
+                        <strong>💡 Summary:</strong> ${data.recommendation_summary}
+                    </div>
+                    <hr>${softwareHtml}
+                `;
+                
+                loadScanHistory();
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: #f56565;">❌ Connection Error: ${error.message}</div>`;
+            }
+        }
+
+        // Scan Malware
+        async function scanMalware() {
+            const url = document.getElementById('malwareUrl').value;
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            const resultDiv = document.getElementById('malwareResult');
+            if (!resultDiv) return;
+            resultDiv.innerHTML = '<div class="loading"></div> Scanning...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/scan/malware`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ url })
+                });
+                
+                const data = await response.json();
+                scanResults.malware = data;
+                
+                if (data.error) {
+                    resultDiv.innerHTML = `<div style="color: #f56565;"><strong>❌ Error:</strong> ${data.error}</div>`;
+                    return;
+                }
+                
+                let riskColor = '#48bb78';
+                let riskText = 'CLEAN';
+                if (data.risk_level === 'HIGH') { riskColor = '#f56565'; riskText = 'CRITICAL RISK'; }
+                else if (data.risk_level === 'MEDIUM') { riskColor = '#ed8936'; riskText = 'SUSPICIOUS'; }
+                else if (data.risk_level === 'LOW_MEDIUM') { riskColor = '#ecc94b'; riskText = 'CAUTION'; }
+                
+                let malwareHtml = '';
+                if (data.malware_findings && data.malware_findings.length > 0) {
+                    malwareHtml = '<strong>🦠 Malware Signatures Detected:</strong><br><br>';
+                    data.malware_findings.forEach(finding => {
+                        malwareHtml += `<div style="margin: 5px 0; padding: 5px; background: #fee;">⚠️ ${finding.signature.replace(/_/g, ' ')}<br><small>${finding.description}</small></div>`;
+                    });
+                } else {
+                    malwareHtml = '<strong>✅ No malware signatures detected!</strong>';
+                }
+                
+                resultDiv.innerHTML = `
+                    <div style="margin-bottom: 10px;">
+                        <strong>🌐 URL:</strong> ${data.url}<br>
+                        <strong>🛡️ Status:</strong> <span style="color: ${riskColor};">${riskText}</span><br>
+                        <strong>⚠️ Risk Level:</strong> <span style="color: ${riskColor};">${data.risk_level}</span><br>
+                        <strong>🔍 Total Issues Found:</strong> ${data.total_issues}<br>
+                        <strong>📊 Summary:</strong> ${data.recommendation_summary}
+                    </div>
+                    <hr>${malwareHtml}
+                `;
+                
+                loadScanHistory();
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color: #f56565;">❌ Connection Error: ${error.message}</div>`;
+            }
+        }
+
+        // Export PDF Report
+        async function exportPDFReport() {
+            if (!scanResults.admin_panel && !scanResults.security_headers && 
+                !scanResults.outdated_software && !scanResults.malware) {
+                alert('Please run at least one security scan before exporting a report.');
+                return;
+            }
+
+            const exportBtn = event.target;
+            const originalText = exportBtn.innerHTML;
+            exportBtn.innerHTML = '<div class="loading" style="width: 15px; height: 15px; display: inline-block;"></div> Generating...';
+            exportBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/export-report`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        scan_data: {
+                            admin_panel: scanResults.admin_panel,
+                            security_headers: scanResults.security_headers,
+                            outdated_software: scanResults.outdated_software,
+                            malware: scanResults.malware
+                        },
+                        report_type: 'full'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const link = document.createElement('a');
+                    link.href = `data:application/pdf;base64,${data.pdf_base64}`;
+                    link.download = data.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                alert('Failed to generate PDF report: ' + error.message);
+            } finally {
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }
+        }
+
+        // Check Password Strength
+        async function checkCustomPassword() {
+            const password = document.getElementById('checkPassword').value;
+            if (!password) {
+                document.getElementById('passwordStrengthResult').innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/check-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await response.json();
+                
+                const colors = { STRONG: '#48bb78', MEDIUM: '#ed8936', WEAK: '#f56565' };
+                const strength = data.strength || 'WEAK';
+                const score = data.score || 0;
+                const suggestions = data.suggestions || [];
+                
+                const resultDiv = document.getElementById('passwordStrengthResult');
+                if (resultDiv) {
+                    resultDiv.innerHTML = `
+                        <div style="background: ${colors[strength]}; height: 10px; border-radius: 5px; width: ${Math.min(score * 20, 100)}%; margin: 10px 0;"></div>
+                        <strong>Strength:</strong> <span class="badge badge-${strength.toLowerCase()}">${strength}</span><br>
+                        <strong>Score:</strong> ${score}/5<br>
+                        <strong>Suggestions:</strong> ${suggestions.join(', ') || 'Good password!'}
+                    `;
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('passwordStrengthResult');
+                if (resultDiv) resultDiv.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+            }
+        }
+
+        // Password strength for registration
+        async function checkPasswordStrength() {
+            const password = document.getElementById('regPassword').value;
+            if (!password) {
+                const meter = document.getElementById('strengthMeter');
+                const feedback = document.getElementById('passwordFeedback');
+                if (meter) meter.className = 'strength-meter';
+                if (feedback) feedback.innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/check-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await response.json();
+                
+                const meter = document.getElementById('strengthMeter');
+                const feedback = document.getElementById('passwordFeedback');
+                if (meter) meter.className = `strength-meter ${(data.strength || 'WEAK').toLowerCase()}`;
+                if (feedback) {
+                    const suggestions = data.suggestions || [];
+                    feedback.innerHTML = suggestions.join(', ') || 'Good password!';
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Run full scan
+        async function runFullScan() {
+            const scanUrl = document.getElementById('scanUrl');
+            const misconfigUrl = document.getElementById('misconfigUrl');
+            const softwareUrl = document.getElementById('softwareUrl');
+            const malwareUrl = document.getElementById('malwareUrl');
+            
+            if (scanUrl && scanUrl.value) {
+                await scanAdminPanel();
+            }
+            if (misconfigUrl && misconfigUrl.value) {
+                await scanMisconfigurations();
+            }
+            if (softwareUrl && softwareUrl.value) {
+                await scanOutdatedSoftware();
+            }
+            if (malwareUrl && malwareUrl.value) {
+                await scanMalware();
+            }
+            
+            await calculateMLRisk();
+        }
+
+        // Login function
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const twofaCode = document.getElementById('twofaCode').value;
+
+            if (!username || !password) {
+                showMessage('authMessage', 'Please enter username and password', 'danger');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, twofa_code: twofaCode })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    authToken = data.access_token;
+                    localStorage.setItem('token', authToken);
+                    localStorage.setItem('userEmail', data.user.email);
+                    document.getElementById('authSection').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    document.getElementById('loginBtn').style.display = 'none';
+                    document.getElementById('logoutBtn').style.display = 'inline-block';
+                    const userDisplay = document.getElementById('userDisplay');
+                    if (userDisplay) userDisplay.innerHTML = `👤 ${data.user.email}`;
+                    showMessage('authMessage', 'Login successful!', 'success');
+                    loadScanHistory();
+                    loadActivityLogs();
+                } else if (data.require_2fa) {
+                    document.getElementById('twofaSection').style.display = 'block';
+                    showMessage('authMessage', 'Please enter your 2FA code', 'info');
+                } else {
+                    showMessage('authMessage', data.error || 'Login failed', 'danger');
+                }
+            } catch (error) {
+                showMessage('authMessage', 'Error: ' + error.message, 'danger');
+            }
+        }
+
+        // Register function
+        async function register() {
+            const email = document.getElementById('regEmail').value;
+            const phone = document.getElementById('regPhone').value;
+            const password = document.getElementById('regPassword').value;
+
+            if ((!email && !phone) || !password) {
+                showMessage('authMessage', 'Please fill all required fields', 'danger');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, phone, password })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('authMessage', 'Registration successful! Please login.', 'success');
+                    setTimeout(() => showLogin(), 2000);
+                } else {
+                    showMessage('authMessage', data.error + (data.suggestions ? ': ' + data.suggestions.join(', ') : ''), 'danger');
+                }
+            } catch (error) {
+                showMessage('authMessage', 'Error: ' + error.message, 'danger');
+            }
+        }
+
+        // UI Functions
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('twofaSection').style.display = 'none';
+            document.getElementById('authMessage').style.display = 'none';
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('authMessage').style.display = 'none';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userEmail');
+            location.reload();
+        }
+    </script>
+</body>
+</html>
